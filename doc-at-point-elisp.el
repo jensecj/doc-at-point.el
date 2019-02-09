@@ -1,8 +1,12 @@
+;;; doc-at-point-elisp.el --- register a backend for `elisp'. -*- lexical-binding: t; -*-
+
 (require 'help)
 (require 'help-fns)
-(require 's)
 
-(require 'doc-at-point-core)
+(require 's)
+(require 'dash)
+
+(require 'doc-at-point)
 
 (defun doc-at-point-elisp--format-documentation (str)
   "Cleanup elisp doc-strings."

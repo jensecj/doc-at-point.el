@@ -1,4 +1,6 @@
-(require 'doc-at-point-core)
+;;; doc-at-point-rust.el --- register a backend for `rust'. -*- lexical-binding: t; -*-
+
+(require 'doc-at-point)
 
 (defun doc-at-point-rust--symbol-at-point ()
   "Return best guess of the rust symbol at point."

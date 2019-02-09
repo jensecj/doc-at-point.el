@@ -1,4 +1,6 @@
-(require 'doc-at-point-core)
+;;; doc-at-point-python.el --- register a backend for `python'. -*- lexical-binding: t; -*-
+
+(require 'doc-at-point)
 
 ;;;###autoload
 (defun doc-at-point-python (symbol)
