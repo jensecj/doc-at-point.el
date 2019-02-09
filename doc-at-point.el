@@ -40,10 +40,14 @@
 
 (defcustom doc-at-point-display-fn (if (fboundp 'popup-tip)
                                        #'doc-at-point--display-fn-popup-tip
-                                     #'message)
+                                     #'doc-at-point--display-fn-message)
   "Function used to display documentation."
   :type 'function
   :group 'doc-at-point)
+
+(defun doc-at-point--display-fn-message (doc-string)
+  "Shows `doc-string' in the minibuffer."
+  (message doc-string))
 
 (defun doc-at-point--display-fn-popup-tip (doc-string)
   "Shows `doc-string' in a popup tooltip."
