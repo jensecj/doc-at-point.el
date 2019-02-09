@@ -25,9 +25,10 @@
 ;; Simple functionality for showing documentation for the symbol at point.
 
 ;; Customizing the information show is done by registering backends using
-;; `doc-at-point-register', which takes two functions `symbol-fn', and `doc-fn',
-;; which recognize the symbol-at-point, and fetch the documentation-string for
-;; that symbol, respectively.
+;; `doc-at-point-register', which takes a mode (or a list of modes) where that
+;; backend should be active, and two functions `symbol-fn', and `doc-fn', which
+;; recognize the symbol-at-point, and fetch the documentation-string for that
+;; symbol, respectively.
 
 ;;; Code:
 
