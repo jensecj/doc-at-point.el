@@ -24,37 +24,32 @@ etc.), and return it as a string."
        (progn ,@body)
        (doc-at-point-elisp--format-documentation (buffer-string)))))
 
-(defun doc-at-point-elisp--describe-function (symbol)
-  "Return documentation for elisp function."
-  (doc-at-point-elisp--capture-to-string
-   (let* ((args (elisp-get-fnsym-args-string symbol))
-          (args (s-replace (format "%s: " symbol) "" args))
-          (args (s-chop-prefix "(" args))
-          (args (s-chop-suffix ")" args))
-          (doc (help-documentation symbol))
-          (source (find-lisp-object-file-name symbol nil)))
-     (emacs-lisp-mode)
+(defun doc-at-point-elisp--describe-function (fn)
+  "Return description of FN."
+  (let* ((doc (documentation fn 'RAW))
+         (source (find-lisp-object-file-name fn nil)))
+    (pcase-let* ((`(,real-function ,def ,_aliased ,real-def)
+                  (help-fns--analyze-function fn)))
+      (doc-at-point-elisp--capture-to-string
+       (help-fns--signature fn doc real-def real-function nil)
 
-     (if (s-blank? args)
-         (insert (format "(%s)" symbol))
-       (insert (format "(%s %s)" symbol args)))
+       (emacs-lisp-mode)
+       (font-lock-fontify-buffer)
 
-     (insert "\n\n")
+       (insert "\n")
 
-     (font-lock-fontify-buffer)
+       (let ((p (point)))
+         (if (s-blank? doc)
+             (insert "this function is not documented")
+           (insert doc))
 
-     (let ((p (point)))
-       (if (s-blank? doc)
-           (insert "this function is not documented")
-         (insert doc))
+         (font-lock-fontify-keywords-region p (point-max)))
 
-       (font-lock-fontify-keywords-region p (point-max)))
+       (goto-char (point-max))
 
-     (goto-char (point-max))
-
-     (when source
-       (insert "\n\n")
-       (insert (format "defined in %s" source))))))
+       (when source
+         (insert "\n\n")
+         (insert (format "defined in %s" source)))))))
 
 (defun doc-at-point-elisp--describe-variable (symbol)
   "Return documentation for elisp variable."
