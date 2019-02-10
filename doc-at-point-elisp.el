@@ -53,12 +53,20 @@ function analysis."
      (help-fns--signature fn doc real-def real-function nil)
      ;; fix for symbols having special characters, like questions marks.
      (replace-regexp "\\\\=\\\\" "" nil (point-min) (point-max)))))
+(defun doc-at-point-elisp--locate-source-file (sym type)
+  "Try to locate where a SYM with TYPE is defined."
+  (let ((source (find-lisp-object-file-name sym type)))
+    (cond
+     ((eq source 'C-source) "C source code")
+     (source (format "%s" source))
+     (t nil))))
 
 (defun doc-at-point-elisp--describe-function (fn)
   "Return description of FN."
   (let* ((doc (documentation fn 'RAW))
          (arglist (doc-at-point-elisp--arglist fn doc))
-         (source-file (find-lisp-object-file-name fn nil)))
+         (source-file (doc-at-point-elisp--locate-source-file
+                       fn (symbol-function fn))))
     (format "%s\n%s%s"
             (doc-at-point-elisp--fontify-as-code arglist)
             (cond
@@ -68,37 +76,27 @@ function analysis."
               ;; don't print superfluous arglist, we've already printed one.
               (let* ((clean-doc (replace-regexp-in-string "\n\n(fn.*)" "" doc)))
                 (doc-at-point-elisp--fontify-as-doc clean-doc))))
-            (if source-file
-                (format "\n\ndefined in %s" source-file)
-              ""))))
+            (if source-file (format "\n\ndefined in %s" source-file) ""))))
 
 (defun doc-at-point-elisp--describe-variable (symbol)
   "Return documentation for elisp variable."
   (let ((doc (documentation-property symbol 'variable-documentation t))
-        (source-file (find-lisp-object-file-name symbol 'defvar)))
+        (source-file (doc-at-point-elisp--locate-source-file symbol 'defvar)))
     (format "%s\n\n%s%s"
             (doc-at-point-elisp--fontify-as-code symbol)
             (doc-at-point-elisp--fontify-as-doc
              (or doc "this variable is not documented"))
-            (if source-file
-                (format "\n\ndefined in %s"
-                        (if (eq source-file 'C-source)
-                            "C source code" source-file))
-              ""))))
+            (if source-file (format "\n\ndefined in %s" source-file) ""))))
 
 (defun doc-at-point-elisp--describe-face (symbol)
   "Return documentation for elisp face."
   (let ((doc (documentation-property symbol 'face-documentation t))
-        (source-file (find-lisp-object-file-name symbol 'defface)))
+        (source-file (doc-at-point-elisp--locate-source-file symbol 'defface)))
     (format "%s\n\n%s%s"
             (doc-at-point-elisp--fontify-as-code symbol)
             (doc-at-point-elisp--fontify-as-doc
              (or doc "this face is not documented"))
-            (if source-file
-                (format "\n\ndefined in %s"
-                        (if (eq source-file 'C-source)
-                            "C source code" source-file))
-              ""))))
+            (if source-file (format "\n\ndefined in %s" source-file) ""))))
 
 (defun doc-at-point-elisp--describe-group (symbol)
   "Return documentation for elisp group."
