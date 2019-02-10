@@ -46,17 +46,6 @@ etc.), and return it as a string."
     (font-lock-fontify-buffer)
     (buffer-string)))
 
-(defun doc-at-point-elisp--arglist (fn doc)
-  "Return the arglist for FN, extracted from documentation and
-function analysis."
-  (pcase-let* ((`(,real-function ,def ,_aliased ,real-def)
-                (help-fns--analyze-function fn)))
-    (doc-at-point-elisp--capture-to-string
-     (help-fns--signature fn doc real-def real-function nil)
-     ;; fix for symbols having special characters, like questions marks.
-     (with-temp-message ""
-       (replace-regexp "\\\\=\\\\" "" nil (point-min) (point-max))))))
-
 (defun doc-at-point-elisp--locate-source-file (sym type)
   "Try to locate where a SYM with TYPE is defined."
   (let ((source (find-lisp-object-file-name sym type)))
@@ -70,6 +59,21 @@ function analysis."
           (doc-at-point-elisp--fontify-as-code symbol)
           (doc-at-point-elisp--fontify-as-doc (or doc "no documentation found"))
           (if source (format "\n\ndefined in %s" source) "")))
+
+(defun doc-at-point-elisp--arglist (fn doc)
+  "Return the arglist for FN, extracted from documentation and
+function analysis."
+  (pcase-let* ((`(,real-function ,def ,_aliased ,real-def)
+                (help-fns--analyze-function fn)))
+    (doc-at-point-elisp--capture-to-string
+     (help-fns--signature fn doc real-def real-function nil)
+     (with-temp-message ""
+       ;; fix for symbols having special characters, like questions marks.
+       (replace-regexp "\\\\=\\\\" "" nil (point-min) (point-max))
+       ;; remove trailing newline
+       (goto-char (point-max))
+       (skip-chars-backward "\n")
+       (kill-region (point) (point-max))))))
 
 (defun doc-at-point-elisp--describe-function (fn)
   "Return description of FN."
