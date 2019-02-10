@@ -33,19 +33,28 @@ etc.), and return it as a string."
           (args (s-chop-suffix ")" args))
           (doc (help-documentation symbol))
           (source (find-lisp-object-file-name symbol nil)))
+     (emacs-lisp-mode)
+
      (if (s-blank? args)
-         (princ (format "(%s)" symbol))
-       (princ (format "(%s %s)" symbol args)))
+         (insert (format "(%s)" symbol))
+       (insert (format "(%s %s)" symbol args)))
 
-     (princ "\n\n")
+     (insert "\n\n")
 
-     (if (s-blank? doc)
-         (princ "this function is not documented")
-       (princ doc))
+     (font-lock-fontify-buffer)
+
+     (let ((p (point)))
+       (if (s-blank? doc)
+           (insert "this function is not documented")
+         (insert doc))
+
+       (font-lock-fontify-keywords-region p (point-max)))
+
+     (goto-char (point-max))
 
      (when source
-       (princ "\n\n")
-       (princ (format "defined in %s" source))))))
+       (insert "\n\n")
+       (insert (format "defined in %s" source))))))
 
 (defun doc-at-point-elisp--describe-variable (symbol)
   "Return documentation for elisp variable."
