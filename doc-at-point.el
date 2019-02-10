@@ -60,6 +60,7 @@ checked for if they should run from lowest order to highest. ")
     (with-current-buffer buf
       (erase-buffer)
       (insert doc-string)
+      (goto-char (point-min))
       (view-buffer-other-window (current-buffer)))))
 
 (defvar doc-at-point-display-fn #'doc-at-point--display-with-buffer
