@@ -58,26 +58,19 @@ function analysis."
   "Return description of FN."
   (let* ((doc (documentation fn 'RAW))
          (arglist (doc-at-point-elisp--arglist fn doc))
-         (source (find-lisp-object-file-name fn nil)))
-    (doc-at-point-elisp--capture-to-string
-     (insert (doc-at-point-elisp--fontify-as-code arglist))
-
-     (insert "\n")
-
-     (let ((p (point)))
-       (cond
-        ((not doc) (insert "this function is not documented."))
-        ((s-blank-str? doc) (insert "this function is not documented."))
-        (t
-         ;; don't print superfluous arglist, we've already printed one.
-         (let* ((clean-doc (replace-regexp-in-string "\n\n(fn.*)" "" doc)))
-           (insert (doc-at-point-elisp--fontify-as-doc clean-doc))))))
-
-     (goto-char (point-max))
-
-     (when source
-       (insert "\n\n")
-       (insert (format "defined in %s" source))))))
+         (source-file (find-lisp-object-file-name fn nil)))
+    (format "%s\n%s%s"
+            (doc-at-point-elisp--fontify-as-code arglist)
+            (cond
+             ((not doc) "this function is not documented")
+             ((s-blank-str? doc) "this function is not documented")
+             (t
+              ;; don't print superfluous arglist, we've already printed one.
+              (let* ((clean-doc (replace-regexp-in-string "\n\n(fn.*)" "" doc)))
+                (doc-at-point-elisp--fontify-as-doc clean-doc))))
+            (if source-file
+                (format "\n\ndefined in %s" source-file)
+              ""))))
 
 (defun doc-at-point-elisp--describe-variable (symbol)
   "Return documentation for elisp variable."
