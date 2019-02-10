@@ -3,9 +3,9 @@
 ;; Copyright (C) 2019 Jens Christian Jensen
 
 ;; Author: Jens Christian Jensen <jensecj@gmail.com>
-;; Keywords: doc-at-point
-;; Package-Version: 20190209
-;; Version: 0.2
+;; Keywords: documentation, help
+;; Package-Version: 20190210
+;; Version: 0.2.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -34,10 +34,20 @@
 
 (require 'map)
 
-(defcustom doc-at-point-alist '()
-  "Alist of plists, containing metadata for documentation."
-  :group 'doc-at-point
-  :type 'alist)
+(defvar doc-at-point-alist '()
+  "Alist of plists.
+KEY is the mode registred with a backend.
+
+VALUE is a plist of `(:symbol-fn :doc-fn :should-run-p :order)'.
+
+:SYMBOL-FN [() -> symbol]: returns the symbol-at-point.
+
+:DOC-FN [symbol -> string]: returns documentation for a symbol.
+
+:SHOULD-RUN-P [() -> nil | t]: returns whether the backend should be used.
+
+:ORDER [number]: The ordering of the backend. Backends are
+checked for if they should run from lowest order to highest. ")
 
 (defcustom doc-at-point-display-fn (if (fboundp 'popup-tip)
                                        #'doc-at-point--display-fn-popup-tip

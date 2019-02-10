@@ -15,8 +15,8 @@
        (s-trim)))
 
 (defmacro doc-at-point-elisp--capture-to-string (&rest body)
-  "Capture output written to `standard-output' by help functions
-and others, and return as string."
+  "Capture output written to `standard-output' (help functions,
+etc.), and return it as a string."
   `(with-temp-buffer
      (let ((standard-output (current-buffer))
            (help-xref-following t))
