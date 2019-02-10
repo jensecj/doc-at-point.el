@@ -24,20 +24,21 @@ etc.), and return it as a string."
        (progn ,@body)
        (doc-at-point-elisp--format-documentation (buffer-string)))))
 
+(defun doc-at-point-elisp--arglist (fn doc)
+  "Return the arglist for FN, extracted from documentation and
+function analysis."
+  (pcase-let* ((`(,real-function ,def ,_aliased ,real-def)
+                (help-fns--analyze-function fn)))
+    (doc-at-point-elisp--capture-to-string
+     (help-fns--signature fn doc real-def real-function nil)
+     ;; fix for symbols having special characters, like questions marks.
+     (replace-regexp "\\\\=\\\\" "" nil (point-min) (point-max)))))
+
 (defun doc-at-point-elisp--describe-function (fn)
   "Return description of FN."
   (let* ((doc (documentation fn 'RAW))
+         (arglist (doc-at-point-elisp--arglist fn doc))
          (source (find-lisp-object-file-name fn nil)))
-    (pcase-let* ((`(,real-function ,def ,_aliased ,real-def)
-                  (help-fns--analyze-function fn)))
-      (doc-at-point-elisp--capture-to-string
-       (help-fns--signature fn doc real-def real-function nil)
-
-       (emacs-lisp-mode)
-       (font-lock-fontify-buffer)
-
-       (insert "\n")
-
        (let ((p (point)))
          (if (s-blank? doc)
              (insert "this function is not documented")
@@ -50,6 +51,14 @@ etc.), and return it as a string."
        (when source
          (insert "\n\n")
          (insert (format "defined in %s" source)))))))
+    (doc-at-point-elisp--capture-to-string
+     (insert arglist)
+
+     (emacs-lisp-mode)
+     (font-lock-fontify-buffer)
+
+     (insert "\n\n")
+
 
 (defun doc-at-point-elisp--describe-variable (symbol)
   "Return documentation for elisp variable."
