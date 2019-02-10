@@ -49,32 +49,38 @@ VALUE is a plist of `(:symbol-fn :doc-fn :should-run-p :order)'.
 :ORDER [number]: The ordering of the backend. Backends are
 checked for if they should run from lowest order to highest. ")
 
-(defcustom doc-at-point-display-fn #'doc-at-point--display-with-message
-  "Function used to display documentation."
-  :type 'function
-  :group 'doc-at-point)
-
 (defun doc-at-point--display-with-message (doc-string)
-  "Shows `doc-string' in the minibuffer."
+  "Show DOC-STRING in the minibuffer."
   (message doc-string))
+
+(defun doc-at-point--display-with-buffer (doc-string)
+  "Show DOC-STRING in a view-mode buffer in another window."
+  (let ((buf (get-buffer-create "*doc-at-point-documentation*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert doc-string)
+      (view-buffer-other-window (current-buffer)))))
+
+(defvar doc-at-point-display-fn #'doc-at-point--display-with-buffer
+  "Function used to display documentation.")
 
 (with-eval-after-load 'popup
   (defun doc-at-point--display-with-popup (doc-string)
-    "Shows `doc-string' in a `popup.el' tooltip."
+    "Shows DOC-STRING in a `popup.el' tooltip."
     (popup-tip doc-string :margin-left 1 :margin-right 1))
 
   (setq doc-at-point-display-fn #'doc-at-point--display-with-popup))
 
 
 (defun doc-at-point--should-run-p (should-run-sym-or-fn)
-  "Return whether or not SHOULD-RUN-FUNCTION indicates if
+  "Return whether or not SHOULD-RUN-SYM-OR-FN indicates if
 should or not."
   (if (functionp should-run-sym-or-fn)
       (funcall should-run-sym-or-fn)
     should-run-sym-or-fn))
 
 (defun doc-at-point--with-entry (entry)
-  "Lookup documentation using `entry'."
+  "Lookup documentation using ENTRY."
   (let* ((symbol-fn (plist-get entry :symbol-fn))
          (doc-fn (plist-get entry :doc-fn))
          (sym (funcall symbol-fn))
