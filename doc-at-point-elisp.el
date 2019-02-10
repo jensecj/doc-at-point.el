@@ -65,50 +65,40 @@ function analysis."
      (source (format "%s" source))
      (t nil))))
 
+(defun doc-at-point-elisp--construct-description (symbol doc source)
+  (format "=== %s\n\n%s%s"
+          (doc-at-point-elisp--fontify-as-code symbol)
+          (doc-at-point-elisp--fontify-as-doc (or doc "no documentation found"))
+          (if source (format "\n\ndefined in %s" source) "")))
+
 (defun doc-at-point-elisp--describe-function (fn)
   "Return description of FN."
-  (let* ((doc (documentation fn 'RAW))
-         (arglist (doc-at-point-elisp--arglist fn doc))
+  (let* ((raw-doc (documentation fn 'RAW))
+         (arglist (doc-at-point-elisp--arglist fn raw-doc))
          (source-file (doc-at-point-elisp--locate-source-file
                        fn (symbol-function fn))))
-    (format "%s\n%s%s"
-            (doc-at-point-elisp--fontify-as-code arglist)
-            (cond
-             ((not doc) "this function is not documented")
-             ((s-blank-str? doc) "this function is not documented")
-             (t
-              ;; don't print superfluous arglist, we've already printed one.
-              (let* ((clean-doc (s-replace-regexp "\n\n(fn.*)" "" doc)))
-                (doc-at-point-elisp--fontify-as-doc clean-doc))))
-            (if source-file (format "\n\ndefined in %s" source-file) ""))))
+    (doc-at-point-elisp--construct-description
+     arglist
+     ;; don't include superfluous arglist, we've already have one.
+     (when raw-doc (replace-regexp-in-string "\n\n(fn.*)" "" raw-doc))
+     source-file)))
 
 (defun doc-at-point-elisp--describe-variable (symbol)
   "Return documentation for elisp variable."
   (let ((doc (documentation-property symbol 'variable-documentation t))
         (source-file (doc-at-point-elisp--locate-source-file symbol 'defvar)))
-    (format "%s\n\n%s%s"
-            (doc-at-point-elisp--fontify-as-code symbol)
-            (doc-at-point-elisp--fontify-as-doc
-             (or doc "this variable is not documented"))
-            (if source-file (format "\n\ndefined in %s" source-file) ""))))
+    (doc-at-point-elisp--construct-description symbol doc source-file)))
 
 (defun doc-at-point-elisp--describe-face (symbol)
   "Return documentation for elisp face."
   (let ((doc (documentation-property symbol 'face-documentation t))
         (source-file (doc-at-point-elisp--locate-source-file symbol 'defface)))
-    (format "%s\n\n%s%s"
-            (doc-at-point-elisp--fontify-as-code symbol)
-            (doc-at-point-elisp--fontify-as-doc
-             (or doc "this face is not documented"))
-            (if source-file (format "\n\ndefined in %s" source-file) ""))))
+    (doc-at-point-elisp--construct-description symbol doc source-file)))
 
 (defun doc-at-point-elisp--describe-group (symbol)
   "Return documentation for elisp group."
   (let ((doc (documentation-property symbol 'group-documentation t)))
-    (format "%s\n\n%s"
-            (doc-at-point-elisp--fontify-as-code symbol)
-            (doc-at-point-elisp--fontify-as-doc
-             (or doc "this group is not documented")))))
+    (doc-at-point-elisp--construct-description symbol doc nil)))
 
 ;;;###autoload
 (defun doc-at-point-elisp (symbol)
