@@ -18,6 +18,32 @@ etc.), and return it as a string."
        (progn ,@body)
        (buffer-string))))
 
+(defun doc-at-point-elisp--fontify-as-doc (doc)
+  "Fontify a string as if it was a doc-string in
+`emacs-lisp-mode'."
+  (with-temp-buffer
+    ;; we do some juggling here, inserting a comment-placeholder,
+    ;; fontifying the documentation, and removing the placeholder again to
+    ;; get the proper fontification for documentation.
+    (let* ((placeholder ";;;   ")
+           (lines (s-lines doc))
+           (commented-lines (-map #'(lambda (l) (s-prepend placeholder l)) lines))
+           (result (s-join "\n" commented-lines)))
+      (insert result)
+      (emacs-lisp-mode)
+      (font-lock-fontify-buffer)
+
+      (replace-regexp placeholder "" nil (point-min) (point-max))
+      (buffer-string))))
+
+(defun doc-at-point-elisp--fontify-as-code (code)
+  "Fontify a string as if it was elisp in `emacs-lisp-mode'."
+  (with-temp-buffer
+    (insert (if (symbolp code) (symbol-name code) code))
+    (emacs-lisp-mode)
+    (font-lock-fontify-buffer)
+    (buffer-string)))
+
 (defun doc-at-point-elisp--arglist (fn doc)
   "Return the arglist for FN, extracted from documentation and
 function analysis."
@@ -34,12 +60,9 @@ function analysis."
          (arglist (doc-at-point-elisp--arglist fn doc))
          (source (find-lisp-object-file-name fn nil)))
     (doc-at-point-elisp--capture-to-string
-     (insert arglist)
+     (insert (doc-at-point-elisp--fontify-as-code arglist))
 
-     (emacs-lisp-mode)
-     (font-lock-fontify-buffer)
-
-     (insert "\n\n")
+     (insert "\n")
 
      (let ((p (point)))
        (cond
@@ -47,17 +70,8 @@ function analysis."
         ((s-blank-str? doc) (insert "this function is not documented."))
         (t
          ;; don't print superfluous arglist, we've already printed one.
-         (let* ((str (replace-regexp-in-string "\n\n(fn.*)" "" doc))
-                ;; we do some juggling here, inserting a comment-placeholder,
-                ;; fontifying the documentation, and removing the placeholder again to
-                ;; get the proper fontification for documentation.
-                (placeholder ";;;   ")
-                (lines (s-lines str))
-                (commented-lines (-map #'(lambda (l) (s-prepend placeholder l)) lines))
-                (result (s-join "\n" commented-lines)))
-           (insert result)
-           (font-lock-fontify-region p (point-max))
-           (replace-regexp placeholder "" nil p (point))))))
+         (let* ((clean-doc (replace-regexp-in-string "\n\n(fn.*)" "" doc)))
+           (insert (doc-at-point-elisp--fontify-as-doc clean-doc))))))
 
      (goto-char (point-max))
 
