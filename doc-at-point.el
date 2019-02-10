@@ -40,11 +40,12 @@ KEY is the mode registred with a backend.
 
 VALUE is a plist of `(:symbol-fn :doc-fn :should-run-p :order)'.
 
-:SYMBOL-FN [() -> symbol]: returns the symbol-at-point.
+:SYMBOL-FN = () -> symbol: returns the symbol-at-point.
 
-:DOC-FN [symbol -> string]: returns documentation for a symbol.
+:DOC-FN = symbol -> string: returns documentation for a symbol.
 
-:SHOULD-RUN-P [() -> nil | t]: returns whether the backend should be used.
+:SHOULD-RUN-P = nil | t | (() -> nil | t): whether the backend
+should be used, can be a symbol or a predicate.
 
 :ORDER [number]: The ordering of the backend. Backends are
 checked for if they should run from lowest order to highest. ")
@@ -124,12 +125,11 @@ trigger from those hooks."
   ;; use posframe as the default display-fn.
   (setq doc-at-point-display-fn #'doc-at-point--display-with-posframe))
 
-(defun doc-at-point--should-run-p (should-run-sym-or-fn)
-  "Return whether or not SHOULD-RUN-SYM-OR-FN indicates if
-should or not."
-  (if (functionp should-run-sym-or-fn)
-      (funcall should-run-sym-or-fn)
-    should-run-sym-or-fn))
+(defun doc-at-point--should-run (sym-or-fn)
+  "Return whether or not SYM-OR-FN indicates if should or not."
+  (if (functionp sym-or-fn)
+      (funcall sym-or-fn)
+    sym-or-fn))
 
 (defun doc-at-point--with-entry (entry)
   "Lookup documentation using ENTRY."
@@ -163,7 +163,7 @@ backend."
   (let* ((current-mode major-mode)
          (entry (car (map-elt doc-at-point-alist current-mode)))
          (should-run (plist-get entry :should-run)))
-    (if (and entry (doc-at-point--should-run-p should-run))
+    (if (and entry (doc-at-point--should-run should-run))
         (doc-at-point--with-entry entry)
       (message "No doc-at-point backend for %s" current-mode))))
 
