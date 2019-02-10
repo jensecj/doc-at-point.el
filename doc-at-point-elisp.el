@@ -74,7 +74,7 @@ function analysis."
              ((s-blank-str? doc) "this function is not documented")
              (t
               ;; don't print superfluous arglist, we've already printed one.
-              (let* ((clean-doc (replace-regexp-in-string "\n\n(fn.*)" "" doc)))
+              (let* ((clean-doc (s-replace-regexp "\n\n(fn.*)" "" doc)))
                 (doc-at-point-elisp--fontify-as-doc clean-doc))))
             (if source-file (format "\n\ndefined in %s" source-file) ""))))
 
