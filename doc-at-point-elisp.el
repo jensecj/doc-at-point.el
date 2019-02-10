@@ -113,12 +113,11 @@ function analysis."
 
 (defun doc-at-point-elisp--describe-group (symbol)
   "Return documentation for elisp group."
-  (doc-at-point-elisp--capture-to-string
-   (let ((doc (documentation-property symbol 'group-documentation t)))
-     (when doc
-       (princ symbol)
-       (princ " is a group.\n\n")
-       (princ doc)))))
+  (let ((doc (documentation-property symbol 'group-documentation t)))
+    (format "%s\n\n%s"
+            (doc-at-point-elisp--fontify-as-code symbol)
+            (doc-at-point-elisp--fontify-as-doc
+             (or doc "this group is not documented")))))
 
 ;;;###autoload
 (defun doc-at-point-elisp (symbol)
