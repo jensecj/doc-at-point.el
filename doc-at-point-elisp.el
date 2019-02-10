@@ -33,7 +33,9 @@ etc.), and return it as a string."
       (emacs-lisp-mode)
       (font-lock-fontify-buffer)
 
-      (replace-regexp placeholder "" nil (point-min) (point-max))
+      (with-temp-message ""
+        (replace-regexp placeholder "" nil (point-min) (point-max)))
+
       (buffer-string))))
 
 (defun doc-at-point-elisp--fontify-as-code (code)
@@ -52,7 +54,9 @@ function analysis."
     (doc-at-point-elisp--capture-to-string
      (help-fns--signature fn doc real-def real-function nil)
      ;; fix for symbols having special characters, like questions marks.
-     (replace-regexp "\\\\=\\\\" "" nil (point-min) (point-max)))))
+     (with-temp-message ""
+       (replace-regexp "\\\\=\\\\" "" nil (point-min) (point-max))))))
+
 (defun doc-at-point-elisp--locate-source-file (sym type)
   "Try to locate where a SYM with TYPE is defined."
   (let ((source (find-lisp-object-file-name sym type)))
