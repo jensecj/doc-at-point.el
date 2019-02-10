@@ -55,7 +55,8 @@ etc.), and return it as a string."
      (t nil))))
 
 (defun doc-at-point-elisp--construct-description (symbol doc source)
-  (format "=== %s\n\n%s%s"
+  "Construct a description of SYMBOL with DOC and SOURCE."
+  (format "%s\n\n%s%s"
           (doc-at-point-elisp--fontify-as-code symbol)
           (doc-at-point-elisp--fontify-as-doc (or doc "no documentation found"))
           (if source (format "\n\ndefined in %s" source) "")))
