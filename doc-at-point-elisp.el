@@ -129,7 +129,7 @@ function analysis."
   (ignore-errors
     (cond
      ((fboundp symbol) (doc-at-point-elisp--describe-function symbol))
-     ((boundp symbol) (doc-at-point-elisp--describe-variable symbol))
+     ((and (boundp symbol) (not (facep symbol))) (doc-at-point-elisp--describe-variable symbol))
      ((facep symbol) (doc-at-point-elisp--describe-face symbol))
      (t (doc-at-point-elisp--describe-group symbol)))))
 
