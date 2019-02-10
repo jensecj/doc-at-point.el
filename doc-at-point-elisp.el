@@ -97,19 +97,17 @@ function analysis."
 
 (defun doc-at-point-elisp--describe-face (symbol)
   "Return documentation for elisp face."
-  (doc-at-point-elisp--capture-to-string
-   (let ((file-name  (find-lisp-object-file-name symbol 'defface)))
-     (princ symbol)
-     (princ " is a face ")
-     (when file-name
-       (princ " defined in `")
-       (princ (if (eq file-name 'C-source)
-                  "C source code"
-                (file-name-nondirectory file-name)))
-       (princ "'."))
-     (princ "\n\n")
-     (princ (or (documentation-property symbol 'face-documentation t)
-                "no documentation.")))))
+  (let ((doc (documentation-property symbol 'face-documentation t))
+        (source-file (find-lisp-object-file-name symbol 'defface)))
+    (format "%s\n\n%s%s"
+            (doc-at-point-elisp--fontify-as-code symbol)
+            (doc-at-point-elisp--fontify-as-doc
+             (or doc "this face is not documented"))
+            (if source-file
+                (format "\n\ndefined in %s"
+                        (if (eq source-file 'C-source)
+                            "C source code" source-file))
+              ""))))
 
 (defun doc-at-point-elisp--describe-group (symbol)
   "Return documentation for elisp group."
