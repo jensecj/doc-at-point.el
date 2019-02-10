@@ -8,12 +8,6 @@
 
 (require 'doc-at-point)
 
-(defun doc-at-point-elisp--format-documentation (str)
-  "Cleanup elisp doc-strings."
-  (->> str
-       (s-replace "For more information check the manuals.\n\n" "")
-       (s-trim)))
-
 (defmacro doc-at-point-elisp--capture-to-string (&rest body)
   "Capture output written to `standard-output' (help functions,
 etc.), and return it as a string."
@@ -22,7 +16,7 @@ etc.), and return it as a string."
            (help-xref-following t))
        (setq major-mode 'help-mode)
        (progn ,@body)
-       (doc-at-point-elisp--format-documentation (buffer-string)))))
+       (buffer-string))))
 
 (defun doc-at-point-elisp--arglist (fn doc)
   "Return the arglist for FN, extracted from documentation and
