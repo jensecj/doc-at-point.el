@@ -39,18 +39,6 @@ function analysis."
   (let* ((doc (documentation fn 'RAW))
          (arglist (doc-at-point-elisp--arglist fn doc))
          (source (find-lisp-object-file-name fn nil)))
-       (let ((p (point)))
-         (if (s-blank? doc)
-             (insert "this function is not documented")
-           (insert doc))
-
-         (font-lock-fontify-keywords-region p (point-max)))
-
-       (goto-char (point-max))
-
-       (when source
-         (insert "\n\n")
-         (insert (format "defined in %s" source)))))))
     (doc-at-point-elisp--capture-to-string
      (insert arglist)
 
@@ -59,6 +47,29 @@ function analysis."
 
      (insert "\n\n")
 
+     (let ((p (point)))
+       (cond
+        ((not doc) (insert "this function is not documented."))
+        ((s-blank-str? doc) (insert "this function is not documented."))
+        (t
+         ;; don't print superfluous arglist, we've already printed one.
+         (let* ((str (replace-regexp-in-string "\n\n(fn.*)" "" doc))
+                ;; we do some juggling here, inserting a comment-placeholder,
+                ;; fontifying the documentation, and removing the placeholder again to
+                ;; get the proper fontification for documentation.
+                (placeholder ";;;   ")
+                (lines (s-lines str))
+                (commented-lines (-map #'(lambda (l) (s-prepend placeholder l)) lines))
+                (result (s-join "\n" commented-lines)))
+           (insert result)
+           (font-lock-fontify-region p (point-max))
+           (replace-regexp placeholder "" nil p (point))))))
+
+     (goto-char (point-max))
+
+     (when source
+       (insert "\n\n")
+       (insert (format "defined in %s" source))))))
 
 (defun doc-at-point-elisp--describe-variable (symbol)
   "Return documentation for elisp variable."
