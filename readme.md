@@ -1,6 +1,8 @@
 **Library for showing documentation for the symbol-at-point.**
 
-![Screenshot of doc-at-point using posframe](screen.png?raw=true "Screenshot of doc-at-point using posframe")
+<p align="center">
+  <img src="screen.png?raw=true">
+</p>
 
 # Usage
 
