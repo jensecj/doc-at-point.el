@@ -172,6 +172,12 @@ backend."
 (defun doc-at-point-setup-defaults ()
   "Setup default handlers for doc-at-point."
   (interactive)
+  ;; set default keybinding if the key is not already used
+  (let ((default-key (kbd "C-+")))
+    (unless (or (local-key-binding default-key)
+                (global-key-binding default-key))
+      (global-set-key default-key #'doc-at-point)))
+
   (require 'doc-at-point-elisp)
   (require 'doc-at-point-python)
   (require 'doc-at-point-rust))
