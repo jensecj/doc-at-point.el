@@ -71,6 +71,7 @@ checked for if they should run from lowest order to highest. ")
     "Shows DOC-STRING in a `popup.el' tooltip."
     (popup-tip doc-string :margin-left 1 :margin-right 1))
 
+  ;; if `popup.el' is loaded, use it as the default display function
   (setq doc-at-point-display-fn #'doc-at-point--display-with-popup))
 
 (with-eval-after-load 'posframe
@@ -79,7 +80,7 @@ checked for if they should run from lowest order to highest. ")
 
   (defvar doc-at-point--posframe-font (frame-parameter (selected-frame) 'font)
     "Font used in child frame, default is the same font as the
-      main-frame.")
+    main-frame.")
 
   (defvar doc-at-point--posframe-format "\n%s\n﻿"
     "Format string for doc-strings to be displayed in the
@@ -123,7 +124,7 @@ trigger from those hooks."
       (dolist (hook doc-at-point--posframe-hide-hooks)
         (add-hook hook #'doc-at-point--posframe-one-shot-kill nil t))))
 
-  ;; use posframe as the default display-fn.
+  ;; if `posframe.el' is loaded, use it as the default display function
   (setq doc-at-point-display-fn #'doc-at-point--display-with-posframe))
 
 (defun doc-at-point--should-run (sym-or-fn)
