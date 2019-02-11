@@ -1,4 +1,4 @@
-;;; doc-at-point-elisp.el --- register a backend for `elisp'. -*- lexical-binding: t; -*-
+;;; doc-at-point-elisp.el --- `Elisp' backend for doc-at-point. -*- lexical-binding: t; -*-
 
 (require 'help)
 (require 'help-fns)
@@ -33,6 +33,7 @@ etc.), and return it as a string."
       (emacs-lisp-mode)
       (font-lock-fontify-buffer)
 
+      ;; now the buffer is fontified, remove comment-placeholder
       (with-temp-message ""
         (replace-regexp placeholder "" nil (point-min) (point-max)))
 
@@ -76,6 +77,7 @@ function analysis."
        (skip-chars-backward "\n")
        (kill-region (point) (point-max))))))
 
+;; TODO: fix aliased functions
 (defun doc-at-point-elisp--describe-function (fn)
   "Return description of FN."
   (let* ((raw-doc (documentation fn 'RAW))

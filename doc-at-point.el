@@ -165,6 +165,7 @@ backend."
   (let* ((current-mode major-mode)
          (entry (car (map-elt doc-at-point-alist current-mode)))
          (should-run (plist-get entry :should-run)))
+    ;; TODO: use ordering to determine which backend should run
     (if (and entry (doc-at-point--should-run should-run))
         (doc-at-point--with-entry entry)
       (message "No doc-at-point backend for %s" current-mode))))
