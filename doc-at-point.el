@@ -38,16 +38,18 @@
   "Alist of plists.
 KEY is the mode registred with a backend.
 
-VALUE is a plist of `(:symbol-fn :doc-fn :should-run-p :order)'.
+VALUE is a map with keys :id, :symbol-fn, :doc-fn, :should-run-p, :order.
 
-:SYMBOL-FN = () -> symbol: returns the symbol-at-point.
+:ID = string: identifier for the backend
 
-:DOC-FN = symbol -> string: returns documentation for a symbol.
+:SYMBOL-FN = () -> symbol: function that returns the symbol-at-point.
 
-:SHOULD-RUN-P = nil | t | (() -> nil | t): whether the backend
-should be used, can be a symbol or a predicate.
+:DOC-FN = symbol -> string: function that returns documentation for a symbol.
 
-:ORDER [number]: The ordering of the backend. Backends are
+:SHOULD-RUN-P = nil | t | (() -> nil | t): predicate for whether
+the backend should be used, can be a symbol or a function.
+
+:ORDER = number: The ordering of the backend. Backends are
 checked for if they should run from lowest order to highest. ")
 
 (defun doc-at-point--display-with-message (doc-string)
