@@ -20,25 +20,30 @@ There are also two extra functions that are used if their libraries are loaded,
 *viz.* `popup.el` or `posframe.el` (from the screenshot).
 
 To register a new backend, you need to provide:
+- a string id for the backend
 - a `major-mode` where it should be active
 - a function for finding the symbol-at-point
 - a function for getting the documentation from that symbol
 - a predicate which decides if the backend should be used
+- a number which denotes the priority of the backend (optional)
 
 ```lisp
 (doc-at-point-register
+  :id "my backend"
   :mode 'some-mode
   :symbol-fn #'thing-at-point
   :doc-fn #'doc-for-symobl
   :should-run t)
 ```
 
-You can also register a backend for multiple modes at once, and `should-run` can
-be a predicate function.
+You can also register a backend for multiple modes at once, `should-run` can
+be a predicate function, and you can set a custom ordering for the priority of the backend.
 ```lisp
 (doc-at-point-register
+  :id "default elisp backend"
   :mode '(python-mode another-python-mode)
   :symbol-fn #'elpy-doc--symbol-at-point
   :doc-fn #'elpy-rpc-get-pydoc-documentation
-  :should-run #'(lambda () (bound-and-true-p elpy-mode)))
+  :should-run #'(lambda () (bound-and-true-p elpy-mode))
+  :order 2)
 ```
