@@ -153,15 +153,32 @@ trigger from those hooks."
   "Predicate for sorting documentation backends by order."
   (< (ht-get a :order) (ht-get b :order)))
 
+(defun doc-at-point--valid-backend-p (backend)
+  "Checks if a BACKEND is valid."
+  (and
+   (stringp (ht-get backend :id))
+   (or (symbolp (ht-get backend :modes))
+       (listp (ht-get backend :modes)))
+   (functionp (ht-get backend :symbol-fn))
+   (functionp (ht-get backend :doc-fn))
+   (or (symbolp (ht-get backend :should-fun))
+       (functionp (ht-get backend :should-fun)))
+   (numberp (ht-get backend :order))))
+
 (defun doc-at-point--add-backend (mode backend)
   "Add a new documentation BACKEND for MODE."
-  (if (doc-at-point--exists? mode (ht-get backend :id))
-      (error "A backend with id '%s' already exists for %s" id modes)
+  (cond
+   ((not (doc-at-point--valid-backend-p backend))
+    (error "Invalid backend: %s" backend))
+   ((doc-at-point--exists? mode (ht-get backend :id))
+    (error "A backend with id '%s' already exists for %s" id modes))
+   (t
     (let ((backends (ht-get doc-at-point-map mode '())))
       (ht-set doc-at-point-map mode
               ;; make sure that the entries sorted
               (sort (cons backend backends)
-                    #'doc-at-point--sort-backend-predicate)))))
+                    #'doc-at-point--sort-backend-predicate))))))
+
 
 (defun doc-at-point--suitable-backend (mode)
   "Try to find a suitable documentation backend to use for MODE."
