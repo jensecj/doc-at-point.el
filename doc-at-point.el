@@ -128,52 +128,57 @@ trigger from those hooks."
   ;; if `posframe.el' is loaded, use it as the default display function
   (setq doc-at-point-display-fn #'doc-at-point--display-with-posframe))
 
-(defun doc-at-point--should-run (sym-or-fn)
-  "Return whether or not SYM-OR-FN indicates if should or not."
-  (if (functionp sym-or-fn)
-      (funcall sym-or-fn)
-    sym-or-fn))
-
-(defun doc-at-point--with-backend (entry)
-  "Lookup documentation using ENTRY."
-  (let* ((symbol-fn (ht-get entry :symbol-fn))
-         (doc-fn (ht-get entry :doc-fn))
-         (sym (funcall symbol-fn))
-         (doc (funcall doc-fn sym)))
-    (if doc
-        (funcall doc-at-point-display-fn doc)
-      (message "No documentation found for %s" (symbol-name sym)))))
-
-(defun doc-at-point--exists? (mode id)
-  (let* ((registered-backends (ht-get doc-at-point-map mode '()))
-         (ids (-map #'(lambda (m) (ht-get m :id)) registered-backends)))
-    (member id ids)))
-
-(defun doc-at-point--sort-backend-predicate (a b)
-  "Predicate for sorting documentation backends by order."
-  (< (ht-get a :order) (ht-get b :order)))
+(defun doc-at-point--get-id (backend) (ht-get backend :id))
+(defun doc-at-point--get-modes (backend) (ht-get backend :modes))
+(defun doc-at-point--get-symbol-fn (backend) (ht-get backend :symbol-fn))
+(defun doc-at-point--get-doc-fn (backend) (ht-get backend :doc-fn))
+(defun doc-at-point--get-should-run-p (backend) (ht-get backend :should-run-p))
+(defun doc-at-point--get-order (backend) (ht-get backend :order))
+(defun doc-at-point--get-backends (mode) (ht-get doc-at-point-map mode))
 
 (defun doc-at-point--valid-backend-p (backend)
   "Checks if a BACKEND is valid."
   (and
-   (stringp (ht-get backend :id))
-   (or (symbolp (ht-get backend :modes))
-       (listp (ht-get backend :modes)))
-   (functionp (ht-get backend :symbol-fn))
-   (functionp (ht-get backend :doc-fn))
-   (or (symbolp (ht-get backend :should-fun))
-       (functionp (ht-get backend :should-fun)))
-   (numberp (ht-get backend :order))))
+   (stringp (doc-at-point--get-id backend))
+   (or (symbolp (doc-at-point--get-modes backend))
+       (listp (doc-at-point--get-modes backend)))
+   (functionp (doc-at-point--get-symbol-fn backend))
+   (functionp (doc-at-point--get-doc-fn backend))
+   (or (symbolp (doc-at-point--get-should-run-p backend))
+       (functionp (doc-at-point--get-should-run-p backend))
+       (string= "closure" (caar (doc-at-point--get-should-run-p backend))))
+   (numberp (doc-at-point--get-order backend))))
+
+(defun doc-at-point--should-run (sym-or-fn)
+  "Return whether or not SYM-OR-FN indicates if it should or not."
+  (if (functionp sym-or-fn)
+      (funcall sym-or-fn)
+    sym-or-fn))
+
+(defun doc-at-point--backend-exists-p (mode id)
+  (let* ((registered-backends (doc-at-point--get-backends mode))
+         (ids (-map
+               #'(lambda (b) (doc-at-point--get-id b))
+               registered-backends)))
+    (member id ids)))
+
+(defun doc-at-point--sort-backend-predicate (a b)
+  "Predicate for sorting documentation backends by order."
+  (< (doc-at-point--get-order a)
+     (doc-at-point--get-order b)))
 
 (defun doc-at-point--add-backend (mode backend)
   "Add a new documentation BACKEND for MODE."
   (cond
    ((not (doc-at-point--valid-backend-p backend))
-    (error "Invalid backend: %s" backend))
-   ((doc-at-point--exists? mode (ht-get backend :id))
-    (error "A backend with id '%s' already exists for %s" id modes))
+    (message "Invalid backend: %s" backend))
+   ((doc-at-point--backend-exists-p mode (doc-at-point--get-id backend))
+    (message
+     "A backend with id '%s' already exists for %s"
+     (doc-at-point--get-id backend)
+     mode))
    (t
-    (let ((backends (ht-get doc-at-point-map mode '())))
+    (let ((backends (doc-at-point--get-backends mode)))
       (ht-set doc-at-point-map mode
               ;; make sure that the entries sorted
               (sort (cons backend backends)
@@ -182,23 +187,34 @@ trigger from those hooks."
 
 (defun doc-at-point--suitable-backend (mode)
   "Try to find a suitable documentation backend to use for MODE."
-  (when-let ((backends (ht-get doc-at-point-map mode)))
+  (when-let ((backends (doc-at-point--get-backends mode)))
     (let* ((backend (-first
                      #'(lambda (b)
                          (doc-at-point--should-run
-                          (ht-get b :should-run)))
+                          (doc-at-point--get-should-run-p b)))
                      backends)))
       (when backend
         backend))))
 
+(defun doc-at-point--with-backend (backend)
+  "Lookup documentation using BACKEND."
+  (let* ((symbol-fn (doc-at-point--get-symbol-fn backend))
+         (doc-fn (doc-at-point--get-doc-fn backend))
+         (sym (funcall symbol-fn))
+         (doc (funcall doc-fn sym)))
+    (if doc
+        (funcall doc-at-point-display-fn doc)
+      (message "No documentation found for %s" sym))))
+
 ;;;###autoload
-(cl-defun doc-at-point-register (&key id modes symbol-fn doc-fn (should-run t) (order 1))
+(cl-defun doc-at-point-register (&key id modes symbol-fn doc-fn (should-run-p t) (order 1))
   "Register a new documentation backend."
+  (declare (indent defun))
   (let ((backend (ht
                   (:id id)
                   (:symbol-fn symbol-fn)
                   (:doc-fn doc-fn)
-                  (:should-run should-run)
+                  (:should-run-p should-run-p)
                   (:order order))))
     (cond
      ((symbolp modes)
