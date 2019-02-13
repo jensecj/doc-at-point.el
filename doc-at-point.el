@@ -147,6 +147,7 @@ trigger from those hooks."
    (functionp (doc-at-point--get-doc-fn backend))
    (or (symbolp (doc-at-point--get-should-run-p backend))
        (functionp (doc-at-point--get-should-run-p backend))
+       ;; FIXME: breaks for closures
        (string= "closure" (car (doc-at-point--get-should-run-p backend))))
    (numberp (doc-at-point--get-order backend))))
 

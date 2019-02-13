@@ -77,7 +77,7 @@ function analysis."
        (skip-chars-backward "\n")
        (kill-region (point) (point-max))))))
 
-;; TODO: fix aliased functions
+;; FIXME: does not work with aliased functions
 (defun doc-at-point-elisp--describe-function (fn)
   "Return description of FN."
   (let* ((raw-doc (documentation fn 'RAW))
@@ -133,3 +133,5 @@ function analysis."
   :order 2)
 
 (provide 'doc-at-point-elisp)
+
+;; TODO: truncate documentation if it's too big, make sure that definition string is shown if available.
