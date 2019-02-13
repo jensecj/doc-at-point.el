@@ -5,7 +5,7 @@
 ;; Author: Jens Christian Jensen <jensecj@gmail.com>
 ;; Keywords: documentation, help
 ;; Package-Version: 20190213
-;; Version: 0.3.0
+;; Version: 0.3.1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -139,17 +139,49 @@ trigger from those hooks."
 
 (defun doc-at-point--valid-backend-p (backend)
   "Checks if a BACKEND is valid."
-  (and
-   (stringp (doc-at-point--get-id backend))
-   (or (symbolp (doc-at-point--get-modes backend))
-       (listp (doc-at-point--get-modes backend)))
-   (functionp (doc-at-point--get-symbol-fn backend))
-   (functionp (doc-at-point--get-doc-fn backend))
-   (or (symbolp (doc-at-point--get-should-run-p backend))
-       (functionp (doc-at-point--get-should-run-p backend))
-       ;; FIXME: breaks for closures
-       (string= "closure" (car (doc-at-point--get-should-run-p backend))))
-   (numberp (doc-at-point--get-order backend))))
+  (let ((id (doc-at-point--get-id backend))
+        (modes (doc-at-point--get-modes backend))
+        (symbol-fn (doc-at-point--get-symbol-fn backend))
+        (doc-fn (doc-at-point--get-doc-fn backend))
+        (should-run-p (doc-at-point--get-should-run-p backend))
+        (order (doc-at-point--get-order backend)))
+    (cond
+     ((not id)
+      (error "Invalid doc-at-point backend, missing key :id"))
+     ((not (stringp id))
+      (error "Invalid doc-at-point backend, :id should be a string, got %s: %s"
+             (type-of id) id))
+
+     ((not modes)
+      (error "Invalid doc-at-point backend, missing key :modes %s" modes))
+     ((not (or (symbolp modes) (listp modes)))
+      (error "Invalid doc-at-point backend, :modes should be a symbol or list of symbols, got %s: %s"
+             (type-of modes) modes))
+
+     ((not symbol-fn)
+      (error "Invalid doc-at-point backend, missing key :symbol-fn"))
+     ((not (or (functionp symbol-fn) (symbolp symbol-fn)))
+      (error "Invalid doc-at-point backend, :symbol-fn should be a function, got a %s: %s"
+             (type-of symbol-fn) symbol-fn))
+
+     ((not doc-fn)
+      (error "Invalid doc-at-point backend, missing key :doc-fn"))
+     ((not (or (functionp doc-fn) (symbolp doc-fn)))
+      (error "Invalid doc-at-point backend, :doc-fn should be a function, got %s: %s"
+             (type-of doc-fn) doc-fn))
+
+     ((not should-run-p)
+      (error "Invalid doc-at-point backend, missing key :should-run-p"))
+     ((not (or (functionp should-run-p) (symbolp should-run-p)))
+      (error "Invalid doc-at-point backend, :should-run-p should be a symbol or a function, got %s: %s"
+             (type-of should-run-p) should-run-p))
+
+     ((not order)
+      (error "Invalid doc-at-point backend, missing key :order"))
+     ((not (numberp order))
+      (error "Invalid doc-at-point backend, :order should be a number, got %s: %s"
+             (type-of order) order))
+     (t backend))))
 
 (defun doc-at-point--should-run (sym-or-fn)
   "Return whether or not SYM-OR-FN indicates if it should or not."
