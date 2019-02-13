@@ -1,7 +1,7 @@
 **Library for showing documentation for the symbol-at-point.**
 
 <p align="center">
-  <img src="screen.png?raw=true">
+  <img src="screencast.gif?raw=true">
 </p>
 
 # Usage
