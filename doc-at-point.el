@@ -137,6 +137,18 @@ trigger from those hooks."
 (defun doc-at-point--get-order (backend) (ht-get backend :order))
 (defun doc-at-point--get-backends (mode) (ht-get doc-at-point-map mode))
 
+(defun doc-at-point--build-backend (id modes symbol-fn doc-fn should-run-p order)
+  "Build a backend structure from arguments.  Returns a valid
+backend, or signals an error."
+  (let ((backend (ht
+                  (:id id)
+                  (:modes modes)
+                  (:symbol-fn symbol-fn)
+                  (:doc-fn doc-fn)
+                  (:should-run-p should-run-p)
+                  (:order order))))
+    (doc-at-point--valid-backend-p backend)))
+
 (defun doc-at-point--valid-backend-p (backend)
   "Checks if a BACKEND is valid."
   (let ((id (doc-at-point--get-id backend))
@@ -244,12 +256,7 @@ trigger from those hooks."
 (cl-defun doc-at-point-register (&key id modes symbol-fn doc-fn (should-run-p t) (order 1))
   "Register a new documentation backend."
   (declare (indent defun))
-  (let ((backend (ht
-                  (:id id)
-                  (:symbol-fn symbol-fn)
-                  (:doc-fn doc-fn)
-                  (:should-run-p should-run-p)
-                  (:order order))))
+  (let ((backend (doc-at-point--build-backend id modes symbol-fn doc-fn should-run-p order)))
     (cond
      ((symbolp modes)
       (doc-at-point--add-backend modes backend))
