@@ -145,7 +145,7 @@ trigger from those hooks."
    (functionp (doc-at-point--get-doc-fn backend))
    (or (symbolp (doc-at-point--get-should-run-p backend))
        (functionp (doc-at-point--get-should-run-p backend))
-       (string= "closure" (caar (doc-at-point--get-should-run-p backend))))
+       (string= "closure" (car (doc-at-point--get-should-run-p backend))))
    (numberp (doc-at-point--get-order backend))))
 
 (defun doc-at-point--should-run (sym-or-fn)
