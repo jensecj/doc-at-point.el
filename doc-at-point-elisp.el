@@ -112,7 +112,6 @@ function analysis."
   "Return documentation for elisp symbol."
   (if (stringp symbol)
       (setq symbol (intern-soft symbol)))
-
   (ignore-errors
     (cond
      ((fboundp symbol)
@@ -126,9 +125,11 @@ function analysis."
 
 ;; register the default elisp handler for doc-at-point
 (doc-at-point-register
- :mode '(emacs-lisp-mode lisp-interaction-mode)
- :symbol-fn #'symbol-at-point
- :doc-fn #'doc-at-point-elisp
- :should-run t)
+  :id "default emacs lisp backend"
+  :modes '(emacs-lisp-mode lisp-interaction-mode)
+  :symbol-fn #'symbol-at-point
+  :doc-fn #'doc-at-point-elisp
+  :should-run-p t
+  :order 2)
 
 (provide 'doc-at-point-elisp)

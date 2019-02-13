@@ -17,9 +17,11 @@
 
 ;; register the default rust handler for doc-at-point
 (doc-at-point-register
- :mode 'rust-mode
- :symbol-fn #'doc-at-point-rust--symbol-at-point
- :doc-fn #'doc-at-point-rust
- :should-run #'(lambda nil (bound-and-true-p racer-mode)))
+  :id "rust racer backend"
+  :modes 'rust-mode
+  :symbol-fn #'doc-at-point-rust--symbol-at-point
+  :doc-fn #'doc-at-point-rust
+  :should-run-p #'(lambda nil (bound-and-true-p racer-mode))
+  :order 2)
 
 (provide 'doc-at-point-rust)

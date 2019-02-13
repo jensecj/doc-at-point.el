@@ -4,8 +4,8 @@
 
 ;; Author: Jens Christian Jensen <jensecj@gmail.com>
 ;; Keywords: documentation, help
-;; Package-Version: 20190210
-;; Version: 0.2.0
+;; Package-Version: 20190213
+;; Version: 0.3.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@
 ;;; Code:
 
 (require 'ht)
-
 
 (defvar doc-at-point-map (ht)
   "Alist of plists.

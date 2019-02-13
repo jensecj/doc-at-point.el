@@ -18,9 +18,11 @@
 
 ;; register the default python handler for doc-at-point
 (doc-at-point-register
- :mode 'python-mode
- :symbol-fn #'elpy-doc--symbol-at-point
- :doc-fn #'doc-at-point-python
- :should-run #'(lambda nil (bound-and-true-p elpy-mode)))
+  :id "python elpy backend"
+  :modes 'python-mode
+  :symbol-fn #'elpy-doc--symbol-at-point
+  :doc-fn #'doc-at-point-python
+  :should-run-p #'(lambda nil (bound-and-true-p elpy-mode))
+  :order 2)
 
 (provide 'doc-at-point-python)
