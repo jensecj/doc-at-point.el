@@ -35,9 +35,9 @@
 (require 'ht)
 
 (defvar doc-at-point-map (ht)
-  "Alist of plists.
-KEY is the mode registred with a backend.
+  "Map from mode-symbol to backend-property-map.
 
+KEY is the mode registred with a backend.
 VALUE is a map with keys :id, :symbol-fn, :doc-fn, :should-run-p, :order.
 
 :ID = string: identifier for the backend
@@ -202,6 +202,7 @@ backend, or signals an error."
     sym-or-fn))
 
 (defun doc-at-point--backend-exists-p (mode id)
+  "Checks if a backend with ID exists for MODE."
   (let* ((registered-backends (doc-at-point--get-backends mode))
          (ids (-map
                #'(lambda (b) (doc-at-point--get-id b))
