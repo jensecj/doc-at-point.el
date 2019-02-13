@@ -32,9 +32,10 @@
 
 ;;; Code:
 
-(require 'map)
+(require 'ht)
 
-(defvar doc-at-point-alist '()
+
+(defvar doc-at-point-map (ht)
   "Alist of plists.
 KEY is the mode registred with a backend.
 
@@ -133,29 +134,62 @@ trigger from those hooks."
       (funcall sym-or-fn)
     sym-or-fn))
 
-(defun doc-at-point--with-entry (entry)
+(defun doc-at-point--with-backend (entry)
   "Lookup documentation using ENTRY."
-  (let* ((symbol-fn (plist-get entry :symbol-fn))
-         (doc-fn (plist-get entry :doc-fn))
+  (let* ((symbol-fn (ht-get entry :symbol-fn))
+         (doc-fn (ht-get entry :doc-fn))
          (sym (funcall symbol-fn))
          (doc (funcall doc-fn sym)))
     (if doc
         (funcall doc-at-point-display-fn doc)
       (message "No documentation found for %s" (symbol-name sym)))))
 
+(defun doc-at-point--exists? (mode id)
+  (let* ((registered-backends (ht-get doc-at-point-map mode '()))
+         (ids (-map #'(lambda (m) (ht-get m :id)) registered-backends)))
+    (member id ids)))
+
+(defun doc-at-point--sort-backend-predicate (a b)
+  "Predicate for sorting documentation backends by order."
+  (< (ht-get a :order) (ht-get b :order)))
+
+(defun doc-at-point--add-backend (mode backend)
+  "Add a new documentation BACKEND for MODE."
+  (if (doc-at-point--exists? mode (ht-get backend :id))
+      (error "A backend with id '%s' already exists for %s" id modes)
+    (let ((backends (ht-get doc-at-point-map mode '())))
+      (ht-set doc-at-point-map mode
+              ;; make sure that the entries sorted
+              (sort (cons backend backends)
+                    #'doc-at-point--sort-backend-predicate)))))
+
+(defun doc-at-point--suitable-backend (mode)
+  "Try to find a suitable documentation backend to use for MODE."
+  (when-let ((backends (ht-get doc-at-point-map mode)))
+    (let* ((backend (car backends))
+           (should-run (ht-get backend :should-run)))
+
+      ;; TODO: use ordering
+      (when (and backend (doc-at-point--should-run should-run))
+        backend)))
+  )
+
 ;;;###autoload
-(cl-defun doc-at-point-register (&key mode symbol-fn doc-fn (should-run t) (order 1))
+(cl-defun doc-at-point-register (&key id modes symbol-fn doc-fn (should-run t) (order 1))
   "Register a new documentation backend."
-  (let ((entry (list `(
-                       :symbol-fn ,symbol-fn
-                       :doc-fn ,doc-fn
-                       :should-run ,should-run
-                       :order ,order))))
+  (let ((backend (ht
+                  (:id id)
+                  (:symbol-fn symbol-fn)
+                  (:doc-fn doc-fn)
+                  (:should-run should-run)
+                  (:order order))))
     (cond
-     ((symbolp mode) (map-put doc-at-point-alist mode entry))
-     ((listp mode) (mapcar (lambda (m)
-                             (map-put doc-at-point-alist m entry))
-                           mode)))))
+     ((symbolp modes)
+      (doc-at-point--add-backend modes backend))
+     ((listp modes)
+      (-map
+       #'(lambda (m) (doc-at-point--add-backend m backend))
+       modes)))))
 
 ;;;###autoload
 (defun doc-at-point ()
@@ -163,11 +197,9 @@ trigger from those hooks."
 backend."
   (interactive)
   (let* ((current-mode major-mode)
-         (entry (car (map-elt doc-at-point-alist current-mode)))
-         (should-run (plist-get entry :should-run)))
-    ;; TODO: use ordering to determine which backend should run
-    (if (and entry (doc-at-point--should-run should-run))
-        (doc-at-point--with-entry entry)
+         (backend (doc-at-point--suitable-backend current-mode)))
+    (if backend
+        (doc-at-point--with-backend backend)
       (message "No doc-at-point backend for %s" current-mode))))
 
 ;;;###autoload
