@@ -183,13 +183,13 @@ trigger from those hooks."
 (defun doc-at-point--suitable-backend (mode)
   "Try to find a suitable documentation backend to use for MODE."
   (when-let ((backends (ht-get doc-at-point-map mode)))
-    (let* ((backend (car backends))
-           (should-run (ht-get backend :should-run)))
-
-      ;; TODO: use ordering
-      (when (and backend (doc-at-point--should-run should-run))
-        backend)))
-  )
+    (let* ((backend (-first
+                     #'(lambda (b)
+                         (doc-at-point--should-run
+                          (ht-get b :should-run)))
+                     backends)))
+      (when backend
+        backend))))
 
 ;;;###autoload
 (cl-defun doc-at-point-register (&key id modes symbol-fn doc-fn (should-run t) (order 1))
