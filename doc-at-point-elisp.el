@@ -30,7 +30,7 @@ etc.), and return it as a string."
            (commented-lines (-map #'(lambda (l) (s-prepend placeholder l)) lines))
            (result (s-join "\n" commented-lines)))
       (insert result)
-      (emacs-lisp-mode)
+      (delay-mode-hooks (emacs-lisp-mode))
       (font-lock-fontify-buffer)
 
       ;; now the buffer is fontified, remove comment-placeholder
@@ -43,7 +43,9 @@ etc.), and return it as a string."
   "Fontify a string as if it was elisp in `emacs-lisp-mode'."
   (with-temp-buffer
     (insert (if (symbolp code) (symbol-name code) code))
-    (emacs-lisp-mode)
+    (delay-mode-hooks (emacs-lisp-mode))
+    (when (boundp 'highlight-defined-mode)
+      (highlight-defined-mode +1))
     (font-lock-fontify-buffer)
     (buffer-string)))
 
