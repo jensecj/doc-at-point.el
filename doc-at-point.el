@@ -6,6 +6,7 @@
 ;; Keywords: documentation, help
 ;; Package-Version: 20190213
 ;; Version: 0.3.1
+;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (s "1.12.0") (ht "2.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -32,7 +33,9 @@
 
 ;;; Code:
 
+(require 'dash)
 (require 'ht)
+(require 's)
 
 (defvar doc-at-point-map (ht)
   "Map from mode-symbol to backend-property-map.
