@@ -8,11 +8,13 @@
 
 (require 'doc-at-point)
 
+;; TODO: capture directly using analysis, messing with help-buffers is a pain
 (defmacro doc-at-point-elisp--capture-to-string (&rest body)
   "Capture output written to `standard-output' (help functions,
 etc.), and return it as a string."
   `(with-temp-buffer
-     (let ((standard-output (current-buffer))
+     (let ((inhibit-message t)
+           (standard-output (current-buffer))
            (help-xref-following t))
        (setq major-mode 'help-mode)
        (progn ,@body)
@@ -25,7 +27,8 @@ etc.), and return it as a string."
     ;; we do some juggling here, inserting a comment-placeholder,
     ;; fontifying the documentation, and removing the placeholder again to
     ;; get the proper fontification for documentation.
-    (let* ((placeholder ";;;   ")
+    (let* ((inhibit-message t)
+           (placeholder ";dap;   ")
            (lines (s-lines doc))
            (commented-lines (-map #'(lambda (l) (s-prepend placeholder l)) lines))
            (result (s-join "\n" commented-lines)))
@@ -41,13 +44,14 @@ etc.), and return it as a string."
 
 (defun doc-at-point-elisp--fontify-as-code (code)
   "Fontify a string as if it was elisp in `emacs-lisp-mode'."
-  (with-temp-buffer
-    (insert (if (symbolp code) (symbol-name code) code))
-    (delay-mode-hooks (emacs-lisp-mode))
-    (when (boundp 'highlight-defined-mode)
-      (highlight-defined-mode +1))
-    (font-lock-fontify-buffer)
-    (buffer-string)))
+  (let ((inhibit-message t))
+    (with-temp-buffer
+      (insert (if (symbolp code) (symbol-name code) code))
+      (delay-mode-hooks (emacs-lisp-mode))
+      (when (boundp 'highlight-defined-mode)
+        (highlight-defined-mode +1))
+      (font-lock-fontify-buffer)
+      (buffer-string))))
 
 (defun doc-at-point-elisp--locate-source-file (sym type)
   "Try to locate where a SYM with TYPE is defined."
