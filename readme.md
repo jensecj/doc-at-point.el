@@ -25,7 +25,7 @@ To register a new backend, you need to provide:
 - a function for finding the symbol-at-point
 - a function for getting the documentation from that symbol
 - a predicate which decides if the backend should be used
-- a number which denotes the priority of the backend (optional)
+- a number which denotes the priority of the backend (default 1)
 
 ```lisp
 (doc-at-point-register
