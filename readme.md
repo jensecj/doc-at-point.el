@@ -31,8 +31,8 @@ To register a new backend, you need to provide:
 (doc-at-point-register
   :id "my backend"
   :mode 'some-mode
-  :symbol-fn #'thing-at-point
-  :doc-fn #'doc-for-symobl
+  :symbol-fn #'symbol-at-point
+  :doc-fn #'documentation
   :should-run t)
 ```
 
@@ -40,7 +40,7 @@ You can also register a backend for multiple modes at once, `should-run` can
 be a predicate function, and you can set a custom ordering for the priority of the backend.
 ```lisp
 (doc-at-point-register
-  :id "default elisp backend"
+  :id "a python backend"
   :mode '(python-mode another-python-mode)
   :symbol-fn #'elpy-doc--symbol-at-point
   :doc-fn #'elpy-rpc-get-pydoc-documentation

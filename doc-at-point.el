@@ -37,7 +37,7 @@
 (require 'ht)
 (require 's)
 
-(defvar doc-at-point-map (ht)
+(defvar doc-at-point-backends (ht)
   "Map from mode-symbol to backend-property-map.
 
 KEY is the mode registred with a backend.
@@ -77,7 +77,7 @@ checked for if they should run from lowest order to highest. ")
 (defun doc-at-point--get-doc-fn (backend) (ht-get backend :doc-fn))
 (defun doc-at-point--get-should-run-p (backend) (ht-get backend :should-run-p))
 (defun doc-at-point--get-order (backend) (ht-get backend :order))
-(defun doc-at-point--get-backends (mode) (ht-get doc-at-point-map mode))
+(defun doc-at-point--get-backends (mode) (ht-get doc-at-point-backends mode))
 
 (defun doc-at-point--build-backend (id modes symbol-fn doc-fn should-run-p order)
   "Build a backend structure from arguments."
@@ -167,7 +167,7 @@ checked for if they should run from lowest order to highest. ")
      mode))
    (t
     (let ((backends (doc-at-point--get-backends mode)))
-      (ht-set doc-at-point-map mode
+      (ht-set doc-at-point-backends mode
               ;; make sure that the entries sorted
               (sort (cons backend backends)
                     #'doc-at-point--sort-backend-predicate))))))
