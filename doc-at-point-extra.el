@@ -67,6 +67,6 @@ trigger from those hooks."
     (interactive)
     (let ((candidate (nth company-selection company-candidates)))
       (funcall doc-at-point-display-fn
-               (doc-at-point-elisp (intern candidate))))))
+               (doc-at-point (intern candidate))))))
 
 (provide 'doc-at-point-extra)

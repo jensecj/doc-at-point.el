@@ -184,11 +184,11 @@ checked for if they should run from lowest order to highest. ")
       (when backend
         backend))))
 
-(defun doc-at-point--with-backend (backend)
+(defun doc-at-point--with-backend (backend &optional sym)
   "Lookup documentation using BACKEND."
   (let* ((symbol-fn (doc-at-point--get-symbol-fn backend))
          (doc-fn (doc-at-point--get-doc-fn backend))
-         (sym (funcall symbol-fn))
+         (sym (if sym sym (funcall symbol-fn)))
          (doc (funcall doc-fn sym)))
     (if doc
         (funcall doc-at-point-display-fn doc)
@@ -209,14 +209,18 @@ checked for if they should run from lowest order to highest. ")
          modes))))))
 
 ;;;###autoload
-(defun doc-at-point ()
+(defun doc-at-point (&optional sym)
   "Show documentation for the symbol at point, based on relevant
-backend."
+backend.
+
+If called with SYM, show documentation for that symbol."
   (interactive)
   (let* ((current-mode major-mode)
          (backend (doc-at-point--suitable-backend current-mode)))
     (if backend
-        (doc-at-point--with-backend backend)
+        (if sym
+            (doc-at-point--with-backend backend sym)
+          (doc-at-point--with-backend backend))
       (message "No doc-at-point backend for %s" current-mode))))
 
 ;;;###autoload
