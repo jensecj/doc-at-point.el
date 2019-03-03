@@ -4,8 +4,8 @@
 
 ;; Author: Jens Christian Jensen <jensecj@gmail.com>
 ;; Keywords: documentation, help
-;; Package-Version: 20190228
-;; Version: 0.4.1
+;; Package-Version: 20190303
+;; Version: 0.4.2
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (s "1.12.0") (ht "2.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
