@@ -172,6 +172,15 @@ checked for if they should run from lowest order to highest. ")
               (sort (cons backend backends)
                     #'doc-at-point--sort-backend-predicate))))))
 
+(defun doc-at-point--remove-backend (mode id)
+  "Remove a documentation backend with ID from MODE."
+  (if (doc-at-point--backend-exists-p mode id)
+      (let* ((backends (ht-get doc-at-point-backends mode))
+             (filtered (-remove
+                        (lambda (e) (string= id (ht-get e :id)))
+                        backends)))
+        (ht-set doc-at-point-backends mode filtered))
+    (message "backend `%s-%s' does not exist." mode id)))
 
 (defun doc-at-point--suitable-backend (mode)
   "Try to find a suitable documentation backend to use for MODE."
