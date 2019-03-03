@@ -23,6 +23,6 @@
   :symbol-fn #'elpy-doc--symbol-at-point
   :doc-fn #'doc-at-point-python
   :should-run-p #'(lambda () (bound-and-true-p elpy-mode))
-  :order 2)
+  :order 99)
 
 (provide 'doc-at-point-python)

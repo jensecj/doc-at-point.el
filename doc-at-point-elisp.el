@@ -136,7 +136,7 @@ function analysis."
   :symbol-fn #'symbol-at-point
   :doc-fn #'doc-at-point-elisp
   :should-run-p t
-  :order 2)
+  :order 99)
 
 (provide 'doc-at-point-elisp)
 
