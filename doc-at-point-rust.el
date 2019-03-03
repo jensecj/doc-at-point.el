@@ -21,7 +21,7 @@
   :modes 'rust-mode
   :symbol-fn #'doc-at-point-rust--symbol-at-point
   :doc-fn #'doc-at-point-rust
-  :should-run-p #'(lambda nil (bound-and-true-p racer-mode))
+  :should-run-p (lambda nil (bound-and-true-p racer-mode))
   :order 99)
 
 (provide 'doc-at-point-rust)

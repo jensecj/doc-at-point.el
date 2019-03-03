@@ -30,7 +30,7 @@ etc.), and return it as a string."
     (let* ((inhibit-message t)
            (placeholder ";dap;   ")
            (lines (s-lines doc))
-           (commented-lines (-map #'(lambda (l) (s-prepend placeholder l)) lines))
+           (commented-lines (-map (lambda (l) (s-prepend placeholder l)) lines))
            (result (s-join "\n" commented-lines)))
       (insert result)
       (delay-mode-hooks (emacs-lisp-mode))

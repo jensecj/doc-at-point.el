@@ -44,6 +44,6 @@ be a predicate function, and you can set a custom ordering for the priority of t
   :mode '(python-mode another-python-mode)
   :symbol-fn #'elpy-doc--symbol-at-point
   :doc-fn #'elpy-rpc-get-pydoc-documentation
-  :should-run #'(lambda () (bound-and-true-p elpy-mode))
+  :should-run (lambda () (bound-and-true-p elpy-mode))
   :order 2)
 ```

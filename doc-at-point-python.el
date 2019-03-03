@@ -22,7 +22,7 @@
   :modes 'python-mode
   :symbol-fn #'elpy-doc--symbol-at-point
   :doc-fn #'doc-at-point-python
-  :should-run-p #'(lambda () (bound-and-true-p elpy-mode))
+  :should-run-p (lambda () (bound-and-true-p elpy-mode))
   :order 99)
 
 (provide 'doc-at-point-python)

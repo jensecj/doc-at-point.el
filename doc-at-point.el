@@ -3,6 +3,7 @@
 ;; Copyright (C) 2019 Jens Christian Jensen
 
 ;; Author: Jens Christian Jensen <jensecj@gmail.com>
+;; URL: http://github.com/jensecj/doc-at-point.el
 ;; Keywords: documentation, help
 ;; Package-Version: 20190303
 ;; Version: 0.4.2
@@ -36,31 +37,34 @@
 (require 'dash)
 (require 'ht)
 (require 's)
+(require 'subr-x)
+
+(require 'doc-at-point-extra)
 
 (defvar doc-at-point-backends (ht)
   "Map from mode-symbol to backend-property-map.
 
-KEY is the mode registred with a backend.
+KEY is the mode registered with a backend.
 VALUE is a map with keys :id, :symbol-fn, :doc-fn, :should-run-p, :order.
 
 :ID = string: identifier for the backend
 
-:SYMBOL-FN = () -> symbol: function that returns the symbol-at-point.
+:SYMBOL-FN = () -> symbol: function that returns the symbol at point.
 
 :DOC-FN = symbol -> string: function that returns documentation for a symbol.
 
 :SHOULD-RUN-P = nil | t | (() -> nil | t): predicate for whether
 the backend should be used, can be a symbol or a function.
 
-:ORDER = number: The ordering of the backend. Backends are
-checked for if they should run from lowest order to highest. ")
+:ORDER = number: The ordering of the backend.  Backends are
+checked for if they should run from lowest order to highest.")
 
 (defun doc-at-point--display-with-message (doc-string)
   "Show DOC-STRING in the minibuffer."
   (message doc-string))
 
 (defun doc-at-point--display-with-buffer (doc-string)
-  "Show DOC-STRING in a view-mode buffer in another window."
+  "Show DOC-STRING in a buffer in another window."
   (let ((buf (get-buffer-create "*doc-at-point-documentation*")))
     (with-current-buffer buf
       (erase-buffer)
@@ -80,7 +84,7 @@ checked for if they should run from lowest order to highest. ")
 (defun doc-at-point--get-backends (mode) (ht-get doc-at-point-backends mode))
 
 (defun doc-at-point--build-backend (id modes symbol-fn doc-fn should-run-p order)
-  "Build a backend structure from arguments."
+  "Build a backend from arguments."
   (let ((backend (ht
                   (:id id)
                   (:modes modes)
@@ -91,7 +95,7 @@ checked for if they should run from lowest order to highest. ")
     backend))
 
 (defun doc-at-point--valid-backend-p (backend)
-  "Checks if a BACKEND is valid."
+  "Check if BACKEND is valid."
   (let ((id (doc-at-point--get-id backend))
         (modes (doc-at-point--get-modes backend))
         (symbol-fn (doc-at-point--get-symbol-fn backend))
@@ -143,15 +147,15 @@ checked for if they should run from lowest order to highest. ")
     sym-or-fn))
 
 (defun doc-at-point--backend-exists-p (mode id)
-  "Checks if a backend with ID exists for MODE."
+  "Check if a backend with ID exists for MODE."
   (let* ((registered-backends (doc-at-point--get-backends mode))
          (ids (-map
-               #'(lambda (b) (doc-at-point--get-id b))
+               (lambda (b) (doc-at-point--get-id b))
                registered-backends)))
     (member id ids)))
 
 (defun doc-at-point--sort-backend-predicate (a b)
-  "Predicate for sorting documentation backends by order."
+  "Predicate for sorting backends by order."
   (< (doc-at-point--get-order a)
      (doc-at-point--get-order b)))
 
@@ -161,14 +165,14 @@ checked for if they should run from lowest order to highest. ")
    ((not (doc-at-point--valid-backend-p backend))
     (message "Invalid backend: %s" backend))
    ((doc-at-point--backend-exists-p mode (doc-at-point--get-id backend))
-    (message
-     "A backend with id '%s' already exists for %s"
-     (doc-at-point--get-id backend)
-     mode))
+    (message "A backend with id '%s' already exists for %s"
+             (doc-at-point--get-id backend) mode))
    (t
     (let ((backends (doc-at-point--get-backends mode)))
       (ht-set doc-at-point-backends mode
-              ;; make sure that the entries sorted
+              ;; make sure that the backends are sorted, so when we're iterating
+              ;; over them later `car' is always the backend with the lowest
+              ;; order
               (sort (cons backend backends)
                     #'doc-at-point--sort-backend-predicate))))))
 
@@ -186,15 +190,17 @@ checked for if they should run from lowest order to highest. ")
   "Try to find a suitable documentation backend to use for MODE."
   (when-let ((backends (doc-at-point--get-backends mode)))
     (let* ((backend (-first
-                     #'(lambda (b)
-                         (doc-at-point--should-run
-                          (doc-at-point--get-should-run-p b)))
+                     (lambda (b)
+                       (doc-at-point--should-run
+                        (doc-at-point--get-should-run-p b)))
                      backends)))
       (when backend
         backend))))
 
 (defun doc-at-point--with-backend (backend &optional sym)
-  "Lookup documentation using BACKEND."
+  "Lookup documentation using BACKEND.
+
+Optionally lookup documentation for SYM using BACKEND."
   (let* ((symbol-fn (doc-at-point--get-symbol-fn backend))
          (doc-fn (doc-at-point--get-doc-fn backend))
          (sym (if sym sym (funcall symbol-fn)))
@@ -214,15 +220,14 @@ checked for if they should run from lowest order to highest. ")
         (doc-at-point--add-backend modes backend))
        ((listp modes)
         (-map
-         #'(lambda (m) (doc-at-point--add-backend m backend))
+         (lambda (m) (doc-at-point--add-backend m backend))
          modes))))))
 
 ;;;###autoload
 (defun doc-at-point (&optional sym)
-  "Show documentation for the symbol at point, based on relevant
-backend.
+  "Show documentation for the symbol at point, based on relevant backend.
 
-If called with SYM, show documentation for that symbol."
+Optionally show documentation for SYM."
   (interactive)
   (let* ((current-mode major-mode)
          (backend (doc-at-point--suitable-backend current-mode)))
@@ -241,11 +246,13 @@ If called with SYM, show documentation for that symbol."
     (unless (or (local-key-binding default-key)
                 (global-key-binding default-key))
       (global-set-key default-key #'doc-at-point))
-    (define-key company-active-map default-key #'doc-at-point-company-menu-selection-quickhelp))
 
-  (require 'doc-at-point-extra)
+    (when (boundp 'company-mode)
+      (define-key company-active-map default-key #'doc-at-point-company-menu-selection-quickhelp)))
+
   (require 'doc-at-point-elisp)
   (require 'doc-at-point-python)
   (require 'doc-at-point-rust))
 
 (provide 'doc-at-point)
+;;; doc-at-point.el ends here
