@@ -2,6 +2,7 @@
 
 (require 'help)
 (require 'help-fns)
+(require 'help-fns+ 'noerror)
 
 (require 's)
 (require 'dash)
@@ -68,6 +69,12 @@ etc.), and return it as a string."
           (dokumat-elisp--fontify-as-doc (or doc "no documentation found"))
           (if source (format "\n\ndefined in %s" source) "")))
 
+(defun dokumat--analyze-function (fn-sym)
+  (pcase-let* ((`(,real-function ,def ,_aliased ,real-def)
+                (help-fns--analyze-function fn-sym)))
+    '(real-function def aliased real-def)
+    )
+  )
 
 (defun dokumat-elisp--arglist (fn doc)
   "Return the arglist for FN, extracted from documentation and

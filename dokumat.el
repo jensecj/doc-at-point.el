@@ -237,6 +237,13 @@ Optionally show documentation for SYM."
           (dokumat--with-backend backend))
       (message "No dokumat backend for %s" current-mode))))
 
+(defun dokumat-other-buffer (&optional sym)
+  "Show documentation for the symbol at point in another buffer.
+
+Optionally show documentation for SYM."
+  (interactive)
+  (let ((dokumat-display-fn #'dokumat--display-with-buffer))
+    (funcall #'dokumat sym)))
 
 ;;;###autoload
 (defun dokumat-setup-defaults ()
