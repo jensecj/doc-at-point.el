@@ -1,9 +1,9 @@
-;;; doc-at-point-python.el --- register a backend for `python'. -*- lexical-binding: t; -*-
+;;; dokumat-python.el --- register a backend for `python'. -*- lexical-binding: t; -*-
 
-(require 'doc-at-point)
+(require 'dokumat)
 
 ;;;###autoload
-(defun doc-at-point-python (symbol)
+(defun dokumat-python (symbol)
   "Return documentation for python symbol."
   (ignore-errors
     (setq doc (elpy-rpc-get-docstring))
@@ -16,13 +16,13 @@
   (if doc doc
     (format "No documentation found for %s" symbol)))
 
-;; register the default python handler for doc-at-point
-(doc-at-point-register
+;; register the default python handler for dokumat
+(dokumat-register
   :id "python elpy backend"
   :modes 'python-mode
   :symbol-fn #'elpy-doc--symbol-at-point
-  :doc-fn #'doc-at-point-python
+  :doc-fn #'dokumat-python
   :should-run-p (lambda () (bound-and-true-p elpy-mode))
   :order 99)
 
-(provide 'doc-at-point-python)
+(provide 'dokumat-python)

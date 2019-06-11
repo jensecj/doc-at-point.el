@@ -1,9 +1,9 @@
-;;; doc-at-point.el --- documentation for the symbol-at-point. -*- lexical-binding: t; -*-
+;;; dokumat.el --- documentation for the symbol-at-point. -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019 Jens Christian Jensen
 
 ;; Author: Jens Christian Jensen <jensecj@gmail.com>
-;; URL: http://github.com/jensecj/doc-at-point.el
+;; URL: http://github.com/jensecj/dokumat.el
 ;; Keywords: documentation, help
 ;; Package-Version: 20190303
 ;; Version: 0.4.2
@@ -27,7 +27,7 @@
 ;; Simple functionality for showing documentation for the symbol at point.
 
 ;; Customizing the information show is done by registering backends using
-;; `doc-at-point-register', which takes a mode (or a list of modes) where that
+;; `dokumat-register', which takes a mode (or a list of modes) where that
 ;; backend should be active, and two functions `symbol-fn', and `doc-fn', which
 ;; recognize the symbol-at-point, and fetch the documentation-string for that
 ;; symbol, respectively.
@@ -39,9 +39,9 @@
 (require 's)
 (require 'subr-x)
 
-(require 'doc-at-point-extra)
+(require 'dokumat-extra)
 
-(defvar doc-at-point-backends (ht)
+(defvar dokumat-backends (ht)
   "Map from mode-symbol to backend-property-map.
 
 KEY is the mode registered with a backend.
@@ -59,31 +59,31 @@ the backend should be used, can be a symbol or a function.
 :ORDER = number: The ordering of the backend.  Backends are
 checked for if they should run from lowest order to highest.")
 
-(defun doc-at-point--display-with-message (doc-string)
+(defun dokumat--display-with-message (doc-string)
   "Show DOC-STRING in the minibuffer."
   (message doc-string))
 
-(defun doc-at-point--display-with-buffer (doc-string)
+(defun dokumat--display-with-buffer (doc-string)
   "Show DOC-STRING in a buffer in another window."
-  (let ((buf (get-buffer-create "*doc-at-point-documentation*")))
+  (let ((buf (get-buffer-create "*dokumat-documentation*")))
     (with-current-buffer buf
       (erase-buffer)
       (insert doc-string)
       (goto-char (point-min))
       (view-buffer-other-window (current-buffer)))))
 
-(defvar doc-at-point-display-fn #'doc-at-point--display-with-buffer
+(defvar dokumat-display-fn #'dokumat--display-with-buffer
   "Function used to display documentation.")
 
-(defun doc-at-point--get-id (backend) (ht-get backend :id))
-(defun doc-at-point--get-modes (backend) (ht-get backend :modes))
-(defun doc-at-point--get-symbol-fn (backend) (ht-get backend :symbol-fn))
-(defun doc-at-point--get-doc-fn (backend) (ht-get backend :doc-fn))
-(defun doc-at-point--get-should-run-p (backend) (ht-get backend :should-run-p))
-(defun doc-at-point--get-order (backend) (ht-get backend :order))
-(defun doc-at-point--get-backends (mode) (ht-get doc-at-point-backends mode))
+(defun dokumat--get-id (backend) (ht-get backend :id))
+(defun dokumat--get-modes (backend) (ht-get backend :modes))
+(defun dokumat--get-symbol-fn (backend) (ht-get backend :symbol-fn))
+(defun dokumat--get-doc-fn (backend) (ht-get backend :doc-fn))
+(defun dokumat--get-should-run-p (backend) (ht-get backend :should-run-p))
+(defun dokumat--get-order (backend) (ht-get backend :order))
+(defun dokumat--get-backends (mode) (ht-get dokumat-backends mode))
 
-(defun doc-at-point--build-backend (id modes symbol-fn doc-fn should-run-p order)
+(defun dokumat--build-backend (id modes symbol-fn doc-fn should-run-p order)
   "Build a backend from arguments."
   (let ((backend (ht
                   (:id id)
@@ -94,165 +94,168 @@ checked for if they should run from lowest order to highest.")
                   (:order order))))
     backend))
 
-(defun doc-at-point--valid-backend-p (backend)
+(defun dokumat--valid-backend-p (backend)
   "Check if BACKEND is valid."
-  (let ((id (doc-at-point--get-id backend))
-        (modes (doc-at-point--get-modes backend))
-        (symbol-fn (doc-at-point--get-symbol-fn backend))
-        (doc-fn (doc-at-point--get-doc-fn backend))
-        (should-run-p (doc-at-point--get-should-run-p backend))
-        (order (doc-at-point--get-order backend)))
+  (let ((id (dokumat--get-id backend))
+        (modes (dokumat--get-modes backend))
+        (symbol-fn (dokumat--get-symbol-fn backend))
+        (doc-fn (dokumat--get-doc-fn backend))
+        (should-run-p (dokumat--get-should-run-p backend))
+        (order (dokumat--get-order backend)))
     (cond
      ((not id)
-      (error "Invalid doc-at-point backend, missing key :id"))
+      (error "Invalid dokumat backend, missing key :id"))
      ((not (stringp id))
-      (error "Invalid doc-at-point backend, :id should be a string, got %s: %s"
+      (error "Invalid dokumat backend, :id should be a string, got %s: %s"
              (type-of id) id))
 
      ((not modes)
-      (error "Invalid doc-at-point backend, missing key :modes %s" modes))
+      (error "Invalid dokumat backend, missing key :modes %s" modes))
      ((not (or (symbolp modes) (listp modes)))
-      (error "Invalid doc-at-point backend, :modes should be a symbol or list of symbols, got %s: %s"
+      (error "Invalid dokumat backend, :modes should be a symbol or list of symbols, got %s: %s"
              (type-of modes) modes))
 
      ((not symbol-fn)
-      (error "Invalid doc-at-point backend, missing key :symbol-fn"))
+      (error "Invalid dokumat backend, missing key :symbol-fn"))
      ((not (or (functionp symbol-fn) (symbolp symbol-fn)))
-      (error "Invalid doc-at-point backend, :symbol-fn should be a function, got a %s: %s"
+      (error "Invalid dokumat backend, :symbol-fn should be a function, got a %s: %s"
              (type-of symbol-fn) symbol-fn))
 
      ((not doc-fn)
-      (error "Invalid doc-at-point backend, missing key :doc-fn"))
+      (error "Invalid dokumat backend, missing key :doc-fn"))
      ((not (or (functionp doc-fn) (symbolp doc-fn)))
-      (error "Invalid doc-at-point backend, :doc-fn should be a function, got %s: %s"
+      (error "Invalid dokumat backend, :doc-fn should be a function, got %s: %s"
              (type-of doc-fn) doc-fn))
 
      ((not should-run-p)
-      (error "Invalid doc-at-point backend, missing key :should-run-p"))
+      (error "Invalid dokumat backend, missing key :should-run-p"))
      ((not (or (functionp should-run-p) (symbolp should-run-p)))
-      (error "Invalid doc-at-point backend, :should-run-p should be a symbol or a function, got %s: %s"
+      (error "Invalid dokumat backend, :should-run-p should be a symbol or a function, got %s: %s"
              (type-of should-run-p) should-run-p))
 
      ((not order)
-      (error "Invalid doc-at-point backend, missing key :order"))
+      (error "Invalid dokumat backend, missing key :order"))
      ((not (numberp order))
-      (error "Invalid doc-at-point backend, :order should be a number, got %s: %s"
+      (error "Invalid dokumat backend, :order should be a number, got %s: %s"
              (type-of order) order))
      (t backend))))
 
-(defun doc-at-point--should-run (sym-or-fn)
+(defun dokumat--should-run (sym-or-fn)
   "Return whether or not SYM-OR-FN indicates if it should or not."
   (if (functionp sym-or-fn)
       (funcall sym-or-fn)
     sym-or-fn))
 
-(defun doc-at-point--backend-exists-p (mode id)
+(defun dokumat--backend-exists-p (mode id)
   "Check if a backend with ID exists for MODE."
-  (let* ((registered-backends (doc-at-point--get-backends mode))
+  (let* ((registered-backends (dokumat--get-backends mode))
          (ids (-map
-               (lambda (b) (doc-at-point--get-id b))
+               (lambda (b) (dokumat--get-id b))
                registered-backends)))
     (member id ids)))
 
-(defun doc-at-point--sort-backend-predicate (a b)
+(defun dokumat--sort-backend-predicate (a b)
   "Predicate for sorting backends by order."
-  (< (doc-at-point--get-order a)
-     (doc-at-point--get-order b)))
+  (< (dokumat--get-order a)
+     (dokumat--get-order b)))
 
-(defun doc-at-point--add-backend (mode backend)
+(defun dokumat--add-backend (mode backend)
   "Add a new documentation BACKEND for MODE."
   (cond
-   ((not (doc-at-point--valid-backend-p backend))
+   ((not (dokumat--valid-backend-p backend))
     (message "Invalid backend: %s" backend))
-   ((doc-at-point--backend-exists-p mode (doc-at-point--get-id backend))
+   ((dokumat--backend-exists-p mode (dokumat--get-id backend))
     (message "A backend with id '%s' already exists for %s"
-             (doc-at-point--get-id backend) mode))
+             (dokumat--get-id backend) mode))
    (t
-    (let ((backends (doc-at-point--get-backends mode)))
-      (ht-set doc-at-point-backends mode
+    (let ((backends (dokumat--get-backends mode)))
+      (ht-set dokumat-backends mode
               ;; make sure that the backends are sorted, so when we're iterating
               ;; over them later `car' is always the backend with the lowest
               ;; order
               (sort (cons backend backends)
-                    #'doc-at-point--sort-backend-predicate))))))
+                    #'dokumat--sort-backend-predicate))))))
 
-(defun doc-at-point--remove-backend (mode id)
+(defun dokumat--remove-backend (mode id)
   "Remove a documentation backend with ID from MODE."
-  (if (doc-at-point--backend-exists-p mode id)
-      (let* ((backends (ht-get doc-at-point-backends mode))
+  (if (dokumat--backend-exists-p mode id)
+      (let* ((backends (ht-get dokumat-backends mode))
              (filtered (-remove
                         (lambda (e) (string= id (ht-get e :id)))
                         backends)))
-        (ht-set doc-at-point-backends mode filtered))
+        (ht-set dokumat-backends mode filtered))
     (message "backend `%s-%s' does not exist." mode id)))
 
-(defun doc-at-point--suitable-backend (mode)
+(defun dokumat--suitable-backend (mode)
   "Try to find a suitable documentation backend to use for MODE."
-  (when-let ((backends (doc-at-point--get-backends mode)))
+  (when-let ((backends (dokumat--get-backends mode)))
     (let* ((backend (-first
                      (lambda (b)
-                       (doc-at-point--should-run
-                        (doc-at-point--get-should-run-p b)))
+                       (dokumat--should-run
+                        (dokumat--get-should-run-p b)))
                      backends)))
       (when backend
         backend))))
 
-(defun doc-at-point--with-backend (backend &optional sym)
+(defun dokumat--with-backend (backend &optional sym)
   "Lookup documentation using BACKEND.
 
 Optionally lookup documentation for SYM using BACKEND."
-  (let* ((symbol-fn (doc-at-point--get-symbol-fn backend))
-         (doc-fn (doc-at-point--get-doc-fn backend))
+  (let* ((symbol-fn (dokumat--get-symbol-fn backend))
+         (doc-fn (dokumat--get-doc-fn backend))
          (sym (if sym sym (funcall symbol-fn)))
          (doc (funcall doc-fn sym)))
     (if doc
-        (funcall doc-at-point-display-fn doc)
+        (funcall dokumat-display-fn doc)
       (message "No documentation found for %s" sym))))
 
 ;;;###autoload
-(cl-defun doc-at-point-register (&key id modes symbol-fn doc-fn (should-run-p t) (order 1))
+(cl-defun dokumat-register (&key id modes symbol-fn doc-fn (should-run-p t) (order 1))
   "Register a new documentation backend."
   (declare (indent defun))
-  (let ((backend (doc-at-point--build-backend id modes symbol-fn doc-fn should-run-p order)))
-    (when (doc-at-point--valid-backend-p backend)
+  (let ((backend (dokumat--build-backend id modes symbol-fn doc-fn should-run-p order)))
+    (when (dokumat--valid-backend-p backend)
       (cond
        ((symbolp modes)
-        (doc-at-point--add-backend modes backend))
+        (dokumat--add-backend modes backend))
        ((listp modes)
         (-map
-         (lambda (m) (doc-at-point--add-backend m backend))
+         (lambda (m) (dokumat--add-backend m backend))
          modes))))))
 
 ;;;###autoload
-(defun doc-at-point (&optional sym)
+(defun dokumat (&optional sym)
   "Show documentation for the symbol at point, based on relevant backend.
 
 Optionally show documentation for SYM."
   (interactive)
   (let* ((current-mode major-mode)
-         (backend (doc-at-point--suitable-backend current-mode)))
+         (backend (dokumat--suitable-backend current-mode)))
     (if backend
         (if sym
-            (doc-at-point--with-backend backend sym)
-          (doc-at-point--with-backend backend))
-      (message "No doc-at-point backend for %s" current-mode))))
+            (dokumat--with-backend backend sym)
+          (dokumat--with-backend backend))
+      (message "No dokumat backend for %s" current-mode))))
+
 
 ;;;###autoload
-(defun doc-at-point-setup-defaults ()
-  "Setup default handlers for doc-at-point."
+(defun dokumat-setup-defaults ()
+  "Setup default handlers for dokumat."
   (interactive)
   ;; set default keybinding if the key is not already used
   (let ((default-key (kbd "C-+")))
     (unless (or (local-key-binding default-key)
                 (global-key-binding default-key))
-      (global-set-key default-key #'doc-at-point))
+      (global-set-key default-key #'dokumat))
 
     (when (boundp 'company-mode)
       (define-key company-active-map default-key #'doc-at-point-company-menu-selection-quickhelp)))
 
-  (require 'doc-at-point-elisp)
-  (require 'doc-at-point-python)
-  (require 'doc-at-point-rust))
+  (require 'dokumat-elisp)
+  (require 'dokumat-python)
+  (require 'dokumat-rust))
 
-(provide 'doc-at-point)
-;;; doc-at-point.el ends here
+;; TODO: add backend for `lsp' / `eglot'
+
+(provide 'dokumat)
+;;; dokumat.el ends here
