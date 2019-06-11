@@ -224,6 +224,24 @@ Optionally lookup documentation for SYM using BACKEND."
          modes))))))
 
 ;;;###autoload
+(defun dokumat-other-buffer (&optional sym)
+  "Show documentation for the symbol at point in another buffer.
+
+Optionally show documentation for SYM."
+  (interactive)
+  (let ((dokumat-display-fn #'dokumat--display-with-buffer))
+    (funcall #'dokumat sym)))
+
+;;;###autoload
+(defun dokumat-echo-area (&optional sym)
+  "Show documentation for the symbol at point in echo area.
+
+Optionally show documentation for SYM."
+  (interactive)
+  (let ((dokumat-display-fn #'dokumat--display-with-message))
+    (funcall #'dokumat sym)))
+
+;;;###autoload
 (defun dokumat (&optional sym)
   "Show documentation for the symbol at point, based on relevant backend.
 
@@ -236,14 +254,6 @@ Optionally show documentation for SYM."
             (dokumat--with-backend backend sym)
           (dokumat--with-backend backend))
       (message "No dokumat backend for %s" current-mode))))
-
-(defun dokumat-other-buffer (&optional sym)
-  "Show documentation for the symbol at point in another buffer.
-
-Optionally show documentation for SYM."
-  (interactive)
-  (let ((dokumat-display-fn #'dokumat--display-with-buffer))
-    (funcall #'dokumat sym)))
 
 ;;;###autoload
 (defun dokumat-setup-defaults ()
