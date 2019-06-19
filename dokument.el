@@ -6,7 +6,7 @@
 ;; URL: http://github.com/jensecj/dokument.el
 ;; Keywords: documentation, help
 ;; Package-Version: 20190303
-;; Version: 0.4.2
+;; Version: 0.5.0
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (s "1.12.0") (ht "2.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -63,6 +63,7 @@ checked for if they should run from lowest order to highest.")
 
 (defun dokument--display-with-buffer (doc-string)
   "Show DOC-STRING in a buffer in another window."
+  ;; TODO: make this for for multiple buffers, kill when closed.
   (let ((buf (get-buffer-create "*dokument-documentation*")))
     (with-current-buffer buf
       (erase-buffer)

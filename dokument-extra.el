@@ -2,6 +2,10 @@
 
 ;; TODO: don't use `with-eval-after-load', its for personal use, not for libraries
 
+;; instead make users require this specific files
+;; (e.g. `dokument-posframe.el'), and set the display function them
+;; selves
+
 (with-eval-after-load 'popup
   (defun dokument--display-with-popup (doc-string)
     "Shows DOC-STRING in a `popup.el' tooltip."
@@ -11,6 +15,7 @@
   (setq dokument-display-fn #'dokument--display-with-popup))
 
 ;; TODO: see company-box for better frame config
+;; TODO: don't rely on `posframe.el'?
 (with-eval-after-load 'posframe
   (defvar dokument--posframe "*dokument-posframe*"
     "Posframe used for displaying documentation.")
