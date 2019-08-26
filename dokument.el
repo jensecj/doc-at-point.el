@@ -6,7 +6,7 @@
 ;; URL: http://github.com/jensecj/dokument.el
 ;; Keywords: documentation, help
 ;; Package-Version: 20190303
-;; Version: 0.5.0
+;; Version: 0.5.1
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (s "1.12.0") (ht "2.3"))
 
 ;; This program is free software; you can redistribute it and/or modify

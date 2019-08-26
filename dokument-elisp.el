@@ -2,7 +2,7 @@
 
 (require 'help)
 (require 'help-fns)
-(require 'help-fns+ 'noerror)
+(require 'help-fns+ nil 'noerror)
 
 (require 's)
 (require 'dash)
